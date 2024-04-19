@@ -20,7 +20,7 @@ const handleLogin = async (req, res) => {
     }
 
     const user = await UserModel.findOne({email: req.body.email})
-    console.log(user);
+    // console.log(user);
     if(!user){
         return res.send({
             status:404,
@@ -50,13 +50,13 @@ const handleLogin = async (req, res) => {
         id: user._id,    
     }
     const token = jwt.sign(payload,db.JWT_SECRET,{expiresIn:"1d"})
-    console.log(token);
+    // console.log(token);
     
     res.cookie('access_token', token,{
-        httpOnly: true,
-      secure: false, // not https yet, so comment this out for now
-    //   sameSite: "none",
-    //   maxAge: 7 * 24 * 60 * 60 * 1000,
+        httpOnly: false,
+      secure: true, // not https yet, so comment this out for now
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     
     // res.setHeader("Set-Cookie", "access_token="+token);
@@ -121,7 +121,7 @@ const handleLogout = (req, res) => {
     //     if (err) { return next(err); }
     //     res.redirect('/login');
     // })
-    console.log(req.cookies);
+    // console.log(req.cookies);
     return res
     .clearCookie("access_token",{sameSite: "none",
     secure: true})

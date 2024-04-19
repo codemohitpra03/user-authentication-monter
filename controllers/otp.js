@@ -33,7 +33,7 @@ const handleSendOtp = async (req,res) => {
         const otp = generateOtp();
 
         const existingOtp = await OtpModel.findOne(existingUser._id);
-        console.log(existingOtp);
+        // console.log(existingOtp);
         if(existingOtp){
             const sendNext = await oneMinCheck(existingOtp.timestamp)
 
