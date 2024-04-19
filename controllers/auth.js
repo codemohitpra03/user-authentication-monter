@@ -3,7 +3,10 @@ const jwt = require('jsonwebtoken')
 const UserModel = require('../models/user_cred')
 const OtpModel = require('../models/otp')
 const db=require('../config/config').get(process.env.NODE_ENV);
-const {re,generateOtp} = require('../utils/constants');
+const {re} = require('../utils/constants');
+
+
+
 
 const handleLogin = async (req, res) => {
     console.log(re.test(req.body.email));
@@ -53,7 +56,7 @@ const handleLogin = async (req, res) => {
 
 const handleRegister = async (req, res) => {
     try {
-        const { email } = req.body;
+        const { email,password } = req.body;
         
         console.log(re.test(email));
 
@@ -98,61 +101,6 @@ const handleRegister = async (req, res) => {
 }
 
 
-const handleSendOtp = async (req,res) => {
-    try {
-        const { email } = req.body;
-        console.log(email);
-        console.log(re.test(email));
-
-        if(!re.test(email)){
-            return res.json({
-                status:400,
-                message:"Enter valid email address"
-            });
-        }
-        // Check if username already exists
-        const existingUser = await UserModel.findOne({ email });
-        if (!existingUser) {
-            return res.status(400).json({
-                status:400,
-                message:"Email does not exists"
-            });
-        }
-        console.log(existingUser);
-
-        if(existingUser.is_verified === 1){
-            return res.status(400).json({
-                status:400,
-                message:"User already verified"
-            });
-        }
-
-        const otp = generateOtp();
-        
-        const savedOtp = new OtpModel({
-            user_id:existingUser._id,
-            otp
-        })
-
-        await savedOtp.save();
-
-        const msg = `Hello ${existingUser}. otp is  ${otp}`
-        console.log(msg);
-        return res.status(200).json({
-            status:200,
-            message:"Otp sent successful",
-        });
-
-    }catch (error) {
-        // Handle any errors
-        console.error('Error sending otp:', error);
-        return res.status(500).json({
-            status:500,
-            message:"Error while sending otp"
-        });
-    }
-}
-
 const handleLogout = (req, res) => {
     // req.logout(function(err) {
     //     if (err) { return next(err); }
@@ -184,6 +132,6 @@ module.exports = {
     handleLogin,
     handleRegister,
     handleLogout,
-    handleSendOtp
+    
     // handleProtected
 }
