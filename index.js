@@ -2,11 +2,13 @@ require('dotenv').config()
 
 const express = require('express')
 const bodyparser=require('body-parser');
+const cookieParser = require('cookie-parser')
 const cors = require('cors');
 
 
 const {connectToMongoDB} = require('./connect.js')
 const authRoute = require('./routes/auth.js')
+const userRoute = require('./routes/user.js')
 
 
 
@@ -18,7 +20,7 @@ connectToMongoDB()
 
 app.use(bodyparser.urlencoded({extended : false}));
 app.use(bodyparser.json());
-
+app.use(cookieParser())
 app.use(cors());
 
 
@@ -29,6 +31,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/auth',authRoute)
+app.use('/user',userRoute)
 
 
 app.listen(PORT, () => {

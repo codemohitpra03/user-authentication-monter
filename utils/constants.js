@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
-const { ObjectId } = require("mongodb");
 const re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+const CircularJSON = require('circular-json');
 
 const generateOtp = () =>{
     return Math.floor(1000 + Math.random()*9000);
@@ -34,10 +34,14 @@ const expiryCheck = (timestamp) =>{
     }
 }
 
+const convertCircularToUsualJSON = (json) =>{
+    return JSON.parse(CircularJSON.stringify(json))
+}
+
 module.exports = {
     re,
     generateOtp,
     oneMinCheck,
     expiryCheck,
-    
+    convertCircularToUsualJSON
 }

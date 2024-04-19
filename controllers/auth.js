@@ -5,17 +5,20 @@ const OtpModel = require('../models/otp')
 const db=require('../config/config').get(process.env.NODE_ENV);
 const {re} = require('../utils/constants');
 
+const {handleSendOtpWhileRegistration} = require('./otp');
 
 
 
 const handleLogin = async (req, res) => {
-    console.log(re.test(req.body.email));
+    
+    
     if(!re.test(req.body.email)){
         return res.json({
             status:400,
             message:"Enter valid email address"
         });
     }
+
     const user = await UserModel.findOne({email: req.body.email})
     console.log(user);
     if(!user){
@@ -25,6 +28,15 @@ const handleLogin = async (req, res) => {
             message:"User not found"
         })
     }
+
+    if(user.is_verified === 0){
+        return res.status(401).send({
+            status:401,
+            success:false,
+            message:"User not verified"
+        })
+    }
+
     if(!compareSync(req.body.password,user.password)){
         return res.send({
             status:401,
@@ -41,10 +53,10 @@ const handleLogin = async (req, res) => {
     console.log(token);
     
     res.cookie('access_token', token,{
-        httpOnly: false,
+        httpOnly: true,
       secure: false, // not https yet, so comment this out for now
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+    //   sameSite: "none",
+    //   maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     
     // res.setHeader("Set-Cookie", "access_token="+token);
@@ -83,11 +95,14 @@ const handleRegister = async (req, res) => {
 
         // Save the new user to the database
         await newUser.save();
-        
         // Respond with success message
+        const result = await handleSendOtpWhileRegistration(email);
+        if(result.status !== 200){
+            throw new Error(result.message)
+        }
         return res.json({
             status:200,
-            message:"Registration successful",
+            message:"Registration successful, Please verify your registration. Check your email",
             email
         });
     } catch (error) {

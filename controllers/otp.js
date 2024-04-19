@@ -70,14 +70,7 @@ const handleSendOtp = async (req,res) => {
         };
 
         await sendOtp(mailOptions)
-        try {
-        } catch (error) {
-            console.error('Error sending otp:', error);
-            return res.status(400).json({
-                status:400,
-                message:"Error while sending otp"
-            });
-        }
+       
 
 
 
@@ -147,7 +140,91 @@ const handleVerifyOtp = async (req,res) =>{
     }
 }
 
+
+const handleSendOtpWhileRegistration = async(email) =>{
+    try {
+        
+        
+
+        if(!re.test(email)){
+            return {
+                status:400,
+                message:"Enter valid email address"
+            };
+        }
+        // Check if username already exists
+        const existingUser = await UserModel.findOne({ email });
+        if (!existingUser) {
+            return {
+                status:400,
+                message:"Email does not exists"
+            };
+        }
+        
+
+        if(existingUser.is_verified === 1){
+            return {
+                status:400,
+                message:"User already verified"
+            };
+        }
+
+        const otp = generateOtp();
+
+        const existingOtp = await OtpModel.findOne(existingUser._id);
+        console.log(existingOtp);
+        if(existingOtp){
+            const sendNext = await oneMinCheck(existingOtp.timestamp)
+
+            if(!sendNext){
+                return {
+                    status:400,
+                    message:"Cannot send Otp ... to early , try after some time"
+                };
+            }
+        }
+
+        await OtpModel.findByIdAndUpdate(existingUser._id,{
+            user_id:existingUser._id,
+            user_email:existingUser.email,
+            otp,
+            timestamp: new Date(),  
+        },{
+            upsert: true,
+            new: true,
+            setDefaultsOnInsert: true
+        })
+
+        
+
+        const msg = `Hello ${existingUser.email}. otp is  ${otp}`
+
+        // console.log(msg);
+
+        const mailOptions = {
+            
+            to: existingUser.email,
+            subject: 'Verify your Identity',
+            text: msg
+        };
+
+        await sendOtp(mailOptions)
+        return {
+            status:200,
+            message:"Otp sent successful",
+        }
+        
+    } catch (error) {
+        console.error('Error sending otp:', error);
+        return {
+            status:500,
+            message:"Error while sending otp"
+        };
+    }
+}
+
 module.exports = {
     handleSendOtp,
-    handleVerifyOtp
+    handleVerifyOtp,
+    handleSendOtpWhileRegistration
 }
